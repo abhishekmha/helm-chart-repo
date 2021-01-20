@@ -1,0 +1,39 @@
+# Default values for admin-service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+metadata:
+    name: springboot-service
+    namespace: demo
+    labels:
+      app: springboot-service
+spec:   
+   name: springboot-svc
+   selector:
+      app: springboot-service
+   replicas: 1
+   template:
+      annotations:
+        timestamp: 20200526_065337
+   containers:
+        name: springboot-service
+   
+   resources:
+      limits:
+         memory: 1792Mi
+         cpu: 0
+      requests:
+         memory: 1792Mi
+         cpu: 0
+   image:
+      name: <TBD>
+      tag: latest
+ports:
+  containerPort: 8084
+  port: 8084
+  name: springboot-svc
+tolerations:
+  key: podtype
+  operator: Equal
+  value: service
+  effect: NoSchedule
