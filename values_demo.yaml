@@ -1,22 +1,22 @@
-# Default values for admin-service.
+# Default values for hello-world-service.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 metadata:
-    name: springboot-service
+    name: hello-world-service
     namespace: demo
     labels:
-      app: springboot-service
+      app: hello-world-service
 spec:   
-   name: springboot-svc
+   name: hello-world-svc
    selector:
-      app: springboot-service
+      app: hello-world-service
    replicas: 1
    template:
       annotations:
         timestamp: 20200526_065337
    containers:
-        name: springboot-service
+        name: hello-world-service
    
    resources:
       limits:
@@ -31,9 +31,9 @@ spec:
 ports:
   containerPort: 8084
   port: 8084
-  name: springboot-svc
-tolerations:
-  key: podtype
-  operator: Equal
-  value: service
-  effect: NoSchedule
+  name: hello-world-svc
+#tolerations:
+  #key: podtype
+  #operator: Equal
+  #value: service
+  #effect: NoSchedule
