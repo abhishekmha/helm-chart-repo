@@ -32,8 +32,8 @@ ports:
   containerPort: 8084
   port: 8084
   name: hello-world-svc
-#tolerations:
-  #key: podtype
-  #operator: Equal
-  #value: service
-  #effect: NoSchedule
+tolerations:
+  key: podtype
+  operator: Equal
+  value: service
+  effect: NoSchedule
