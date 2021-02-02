@@ -1,22 +1,22 @@
-# Default values for hello-world-service.
+# Default values for demo-hello-world.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 metadata:
-    name: hello-world-service
+    name: demo-hello-world
     namespace: demo
     labels:
-      app: hello-world-service
+      app: demo-hello-world
 spec:   
    name: hello-world-svc
    selector:
-      app: hello-world-service
+      app: demo-hello-world
    replicas: 1
    template:
       annotations:
         timestamp: 20200526_065337
    containers:
-        name: hello-world-service
+        name: demo-hello-world
    
    resources:
       limits:
