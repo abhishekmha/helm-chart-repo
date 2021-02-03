@@ -1,37 +1,37 @@
-# Default values for hello-world-service.
+# Default values for frontend-service.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 metadata:
-    name: hello-world-service
+    name: frontend-service
     namespace: demo
     labels:
-      app: hello-world-service
+      app: frontend-service
 spec:   
-   name: hello-world-svc
+   name: frontend-svc
    selector:
-      app: hello-world-service
+      app: frontend-service
    replicas: 1
    template:
       annotations:
         timestamp: 20200526_065337
    containers:
-        name: hello-world-service
+        name: frontend-service
    
    resources:
       limits:
-         memory: 1792Mi
+         memory: 2000Mi
          cpu: 0
       requests:
-         memory: 1792Mi
+         memory: 2000Mi
          cpu: 0
    image:
-      name: gcr.io/varshaprocurant-poc/springboot-hello-world
+      name: gcr.io/varshaprocurant-poc/frontend-service
       tag: 1.0.0-snapshot-4dc3f3d
 ports:
   containerPort: 8084
   port: 8084
-  name: hello-world-svc
+  name: frontend-svc
 tolerations:
   key: podtype
   operator: Equal
