@@ -1,0 +1,41 @@
+pipeline {
+    agent { label 'jenkins-pod-slave' }
+
+    stages {
+        stage('checkout helm repo') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github-username-pass', url: 'https://github.com/snehalshirsath/helm-chart-repo.git']]])
+            }
+        }
+        
+        stage('get the parameters'){
+            steps{
+                script{
+                    env.serviceName = params.serviceName
+                    env.environment = params.environment
+                    println serviceName
+                    println environment
+                }
+            }
+        }
+
+        stage('deploy the helm chart'){
+            steps{
+                sh '''
+                cd /home/jenkins/agent/workspace/${JOB_NAME}/${serviceName}/
+                helm_release="`helm ls|grep ${environment}-${serviceName}-release || true`"
+				echo $helm_release
+                if [ -z "$helm_release" ]
+                then
+				echo "inside if"
+                    helm install --values=values_${environment}.yaml --name ${environment}-${serviceName}-release .
+                    else
+					echo "inside else"
+                    helm upgrade --install --values=values_${environment}.yaml ${environment}-${serviceName}-release .
+                fi
+                
+                '''
+            }
+        }
+    }
+}
