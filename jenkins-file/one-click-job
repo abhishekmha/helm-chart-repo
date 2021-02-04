@@ -1,0 +1,59 @@
+pipeline {
+
+    agent { label 'jenkins-pod-slave' }
+
+    stages {
+        stage('clone-release-tracker-repo') {
+            steps {
+                    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/snehalshirsath/release-note.git']]])
+             }
+		}
+
+        stage('read-release-tracker-file') {
+            steps{
+                script{
+                    //get service name and version
+                    env.platform_release = params.Platform_Release
+                    println platform_release
+                    def file = "/home/jenkins/agent/workspace/one-click-job/${env.platform_release}.csv"
+                    println file
+				    firstLine = readFile(file).split('\n').each { line, count ->
+                    println(count + "<-conut  line" + line)
+                    env.serviceName = line.split(',')[0];  
+			        env.versionNumber = line.split(',')[1];
+				    println('Name' + serviceName +' ------' + 'Version' + versionNumber) 
+                    
+
+                    //get commit-id
+                    withCredentials([usernamePassword(credentialsId: 'github-username-pass', passwordVariable: 'git_password', usernameVariable: 'git_username')]) {
+                    def commitId = sh (returnStdout: true, script: "git ls-remote https://${git_username}:${git_password}@github.com/snehalshirsath/${serviceName}.git release/${versionNumber} | cut -c 1-7").trim()
+                    println commitId
+                    env.commitID = commitId
+                    println('Name' + serviceName +' ------' + 'Version' + versionNumber )
+                    }
+                     
+                    //create tag
+                    env.git_tag = "${versionNumber}-snapshot-${commitID}"
+                    println git_tag
+
+                    //check into gcr repo
+                    def existing_tags = sh (script: 'gcloud container images list-tags --filter="tags:${git_tag}" gcr.io/varshaprocurant-poc/${serviceName}',
+                    ,returnStdout:true)
+                    if("$existing_tags" == "") {
+                        echo "tag does not exist- build and deploy"
+                        env.environment = params.Environment
+                        println environment
+                        build job: "${env.serviceName}-build-job", parameters: [string(name: 'serviceName', value: String.valueOf(serviceName)),string(name: 'versionNumber', value: String.valueOf(versionNumber)),string(name: 'commitID', value: String.valueOf(commitID)),string(name: 'environment', value: String.valueOf(environment))]
+                        }
+                    else {
+                        echo "tag exists trigger a helm chek job"
+                        build job: "helm-image-check-job", parameters: [string(name: 'git_tag', value: String.valueOf(git_tag)),string(name: 'serviceName', value: String.valueOf(serviceName)),string(name: 'environment', value: String.valueOf(environment))]
+                        }
+                    
+				    }
+
+				 }
+			}
+        }
+    }
+}
