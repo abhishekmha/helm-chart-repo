@@ -27,7 +27,7 @@ spec:
          cpu: 500m
    image:
       name: gcr.io/varshaprocurant-poc/backend-service
-      tag: 1.0.1-snapshot-1d3b358
+      tag: 1.0.1-snapshot-1d3b111
 ports:
   containerPort: 9001
   port: 9001
