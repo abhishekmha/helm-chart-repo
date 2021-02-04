@@ -20,17 +20,17 @@ spec:
    
    resources:
       limits:
-         memory: 2000Mi
-         cpu: 0
+         memory: 512Mi
+         cpu: 500m
       requests:
-         memory: 2000Mi
-         cpu: 0
+         memory: 512Mi
+         cpu: 500m
    image:
       name: gcr.io/varshaprocurant-poc/backend-service
       tag: 1.0.1-snapshot-1d3b358
 ports:
-  containerPort: 8084
-  port: 8084
+  containerPort: 9001
+  port: 9001
   name: backend-svc
 tolerations:
   key: podtype
