@@ -7,6 +7,8 @@ metadata:
     namespace: demo
     labels:
       app: backend-service
+service:
+  type: NodePort
 spec:   
    name: backend-svc
    selector:
