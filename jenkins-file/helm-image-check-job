@@ -1,0 +1,55 @@
+pipeline{
+    agent { label 'jenkins-pod-slave' }
+
+    stages{
+        stage('pull helm chart'){
+            steps{
+               checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github-username-pass', url: 'https://github.com/snehalshirsath/helm-chart-repo.git']]])
+                
+            }
+        }
+        
+        stage('get the parameters'){
+            steps{
+                script{
+                    env.updated_tag = params.git_tag
+                    env.serviceName = params.serviceName
+                    env.environment = params.environment
+                    println updated_tag
+                }
+            }
+        }
+
+        stage('image-check'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'github-username-pass', passwordVariable: 'git_password', usernameVariable: 'git_username')]) {
+                    sh '''
+                    tag_name=`grep -i tag /home/jenkins/agent/workspace/helm-image-check-job/${serviceName}/values_${environment}.yaml`
+                    existing_tag=`echo $tag_name| rev | cut -d ":" -f1 | rev`
+                    echo "$existing_tag"
+                
+                    if [ ${existing_tag} = ${updated_tag} ]
+                    then
+                         echo "trigger deploy"
+                    else
+                        echo "change the tag"
+                        sed -i "s/$existing_tag/ ${updated_tag}/g" /home/jenkins/agent/workspace/helm-image-check-job/${serviceName}/values_${environment}.yaml
+                        echo "now push to git repo"
+                        git checkout master
+                        git add .
+                        git commit -m "updated image tag in values.yaml"
+                        git push https://${git_username}:${git_password}@github.com/snehalshirsath/helm-chart-repo.git master
+                    fi
+                '''
+                }   
+                
+            }
+        }
+
+        stage('deploy helm chart'){
+            steps{
+                build job: "${serviceName}-deploy-job", parameters: [string(name: 'serviceName', value: String.valueOf(serviceName)),string(name: 'environment', value: String.valueOf(environment))]
+            }
+        }
+    }
+}
