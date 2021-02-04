@@ -1,0 +1,60 @@
+pipeline {
+
+environment {
+    servicename = "${params.serviceName}"
+    versionNumber = "${params.versionNumber}"
+    environment = "${params.environment}"
+    registry = "gcr.io/varshaprocurant-poc/${servicename}"
+    dockerImage = ""
+}
+
+agent { label 'jenkins-pod-slave' }
+
+stages {
+    stage('checkout source code') {
+        steps{
+            checkout([$class: 'GitSCM', branches: [[name: "*/release/${versionNumber}"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github-username-pass', url: "https://github.com/snehalshirsath/${serviceName}.git"]]])
+            }
+        }
+    
+    stage('build code') {
+        steps {
+            sh 'mvn clean install'
+            }
+    }
+    
+    stage('build jar'){
+        steps{
+            sh 'mvn package'
+            }
+        }
+        
+    stage('build image') {
+        steps{
+            script{
+                env.git_tag = "${params.versionNumber}-snapshot-${params.commitID}"
+                dockerImage = docker.build registry + ":${git_tag}"
+                sh 'docker images'
+                }
+            }
+        }
+        
+    stage('push image') {
+        steps{
+            withDockerRegistry(credentialsId: 'gcr:demo', url: 'https://gcr.io') {
+                sh 'docker push gcr.io/varshaprocurant-poc/${servicename}:${git_tag}'
+                }
+            }
+        }
+    
+    stage('trigger helm check job') {
+        steps{
+            script{
+                build job: 'helm-image-check-job', parameters: [string(name: 'git_tag', value: String.valueOf(git_tag)),string(name: 'serviceName', value: String.valueOf(serviceName)),string(name: 'environment', value: String.valueOf(environment))]
+                
+            }
+        }
+    }
+    }
+
+}
